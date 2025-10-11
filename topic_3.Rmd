@@ -1,0 +1,258 @@
+---
+title: "topic_3:Independence of random variables and distribution of linear combination of multivariate normal varites"
+author: "shubhangi jadhav_2405"
+date: "2025-08-01"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Q1
+```{r}
+m=c(-3,1,4)
+S=matrix(c(1,-2,0,
+           -2,5,0,
+           0,0,2),nrow =3)
+#a)
+l=c(1/2,1/2,0)
+k=c(0,0,1)
+y_1=t(l)%*%S%*%k
+ifelse(y_1==0,"independently distributed","not independently distributed")
+#b)
+l_1=c(1,-1,0)
+k_1=c(1,1,0)
+y_2=t(l_1)%*%S%*%k_1
+ifelse(y_2==0,"independently distributed","not independently distributed")
+#iii)
+l_2=c(0,1,0)
+k_2=c(-5/2,1,-1)
+y_3=l_2%*%S%*%k_2
+ifelse(y_3==0,"independently distributed","not independently distributed")
+# d)
+A=matrix(c(1,1,0,
+           3,-1,0),nrow=2)
+B=matrix(c(1,0,0,
+           1,-1,0,
+           1,4,-1),nrow=3)
+Y2=A%*%S%*%t(B)
+ifelse(all(Y2==0),"independently distributed","not independently distributed")
+
+# other ex
+D= matrix(c(1, 0, 0,
+             0, 1, 0,
+            0,0,1), nrow = 3, byrow = TRUE)
+N= matrix(c(0, 1, 0,
+             0, 0, 1,
+            1,0,1), nrow = 3, byrow = TRUE)
+Y3=D%*%S%*%t(N)
+ifelse(all(Y3==0),"independently distributed","not independently distributed")
+```
+Q2
+```{r}
+#Dist. of linear combination of Multivariate normal variates
+library(MASS)
+m = as.vector(c(2,-3,1)) # mean vector (p = 3)
+s = matrix(c(1,1,1,
+             1,2,1,
+             1,1,2), nrow = 3, byrow = TRUE)  # 3x3 covariance matrix
+
+# Define transformation matrix A (e.g., A is 2 x 3)
+A = matrix(c( 1,  0, -1,
+              0,  1,  1), nrow = 2, byrow = TRUE)
+
+# Compute and print theoretical mean and covariance of Y = AX
+my = A %*% m
+vcmy = A %*% s %*% t(A)
+cat("Theoretical Mean of Y = AX:\n");print(my);
+cat("\nTheoretical Covariance of Y = AX:\n");print(vcmy);
+
+```
+q3
+```{r}
+m=c(260,231,222)
+S=matrix(c(2276,1508,813,
+         1508,2206,1349,
+         813,1349,1865),nrow=3)
+l=c(1,-1,0)
+m_1=t(l)%*%m
+m_1
+s_1=t(l)%*%S%*%l
+s_1
+
+```
+
+```{r}
+# Independence of transformed random variables
+# Define two linear combinations: Y1 = a'X, Y2 = b'X
+# Compute Cov(Y1, Y2) = a'Σb
+
+m= c(0, 0, 0)
+s = matrix(c( 2, 1, 0,
+              1, 3, 0,
+              0, 0, 1), nrow = 3, byrow = TRUE)
+a=c(1,-1,0)
+b = c(1, 1, 0)   #Only depends on first two variables
+# Step 3:
+cov_1=t(a) %*%s%*% b
+cat("Cov(Y1, Y2) =",cov_1,"\n")
+
+
+# Visualization through Simulation X and compute empirical correlation
+set.seed(123)
+n = 50
+X = t(mvrnorm(n, m, s))
+Y1 = as.matrix(a %*% X)
+Y2 = as.matrix(b %*% X)
+cor(Y1[1,],Y2[1,])
+# Step 5: Plot to visualize relation
+plot(Y1, Y2, pch = 20, col = rgb(0, 0, 1, 0.3),
+     main = "Scatterplot of Y1 vs Y2",
+     xlab = "Y1 = a'X", ylab="Y2=b'X")
+```
+```{r}
+n=120
+mu=c(-3,1,4)
+s=matrix(c(1,-2,0,
+           -2,5,0,
+           0,0,2),nrow=3)
+
+l=c(1/2,1/2,0)  
+m=c(0,0,1)
+y1=t(l)%*%s%*%m
+ifelse(y1==0,"ind","not ind")
+
+A=matrix(c(1,1,0,
+           3,-1,0),2)
+B=matrix(c(1,0,0,
+           1,-1,0,
+           1,4,-1),3)
+Y2=A%*%s%*%t(B)
+ifelse(all(Y2==0),"ind","not ind")
+
+x=t(mvrnorm(n,mu,s))
+z1=as.matrix(l*x)
+z2=as.matrix(m*x)
+cov(z1[1,],z2[1,])
+plot(z1,z2)
+```
+# Q.3
+```{r}
+m=c(4,3,2,1)
+s=matrix(c(3,0,2,2,
+           0,1,1,0,
+           2,1,9,-2,
+           2,0,-2,4),4)
+p=4
+q=2
+m1=m[1:q]
+m2=m[(1+q):p]
+s11=s[1:q,1:q]
+s12=s[1:q,(1+q):p]
+s21=t(s12)
+s22=s[(1+q):p,(1+q):p]
+
+A=matrix(c(1,2),1)
+B=matrix(c(1,-2,
+           2,-1),2)
+# a
+ax_m=A%*%m1
+bx_m=B%*%m2
+# b
+ax_s=A%*%s11%*%t(A)
+bx_s=B%*%s22%*%t(B)
+#c
+a_x_b_cov=A%*%s12%*%t(B)
+k1=s11-s12%*%solve(s22)%*%s21
+k2=s22-s21%*%solve(s11)%*%s12
+
+ax_m
+bx_m
+ax_s
+bx_s
+s12
+a_x_b_cov
+k1
+k2
+```
+#Q.4
+```{r}
+m=c(4,3,2,1)
+s=matrix(c(3,0,2,2,
+           0,1,1,0,
+           2,1,9,-2,
+           2,0,-2,4),4)
+p=4
+q=2
+m1=m[1:q]
+m2=m[(1+q):p]
+s11=s[1:q,1:q]
+s12=s[1:q,(1+q):p]
+s21=t(s12)
+s22=s[(1+q):p,(1+q):p]
+
+A=matrix(c(1,-1,
+           2,3),nrow=2)
+B=matrix(c(2,-1,
+           0,1),nrow=2)
+# a
+ax_m=A%*%m1
+bx_m=B%*%m2
+# b
+ax_s=A%*%s11%*%t(A)
+bx_s=B%*%s22%*%t(B)
+#c
+a_x_b_cov=A%*%s12%*%t(B)
+k1=s11-s12%*%solve(s22)%*%s21
+k2=s22-s21%*%solve(s11)%*%s12
+
+ax_m
+bx_m
+ax_s
+bx_s
+s12
+a_x_b_cov
+k1
+k2
+```
+# Q.5
+```{r}
+rm(list=ls())
+m=c(2,4,-1,3,0)
+s=matrix(c(4,-1,1/2,-1/2,0,
+           -1,3,1,1,0,
+           1/2,1,6,1,-1,
+           -1/2,1,1,4,0,
+           0,0,-1,0,2) ,nrow =5)
+p=5
+q=2
+m1=m[1:q]
+m2=m[(1+q):p]
+s11=s[1:q,1:q]
+s12=s[1:q,(1+q):p]
+s21=t(s12)
+s22=s[(1+q):p,(1+q):p]
+
+A=matrix(c(1,-1,
+           1,1),nrow=2)
+B=matrix(c(1,1,2,
+           1,1,-2),nrow=2)
+# a
+ax_m=A%*%m1
+bx_m=B%*%m2
+# b
+ax_s=A%*%s11%*%t(A)
+bx_s=B%*%s22%*%t(B)
+#c
+a_x_b_cov=A%*%s12%*%t(B)
+ax_m
+bx_m
+ax_s
+bx_s
+a_x_b_cov
+
+```
+

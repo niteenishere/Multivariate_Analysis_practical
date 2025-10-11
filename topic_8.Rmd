@@ -1,0 +1,161 @@
+---
+title: "TOPIC 8"
+author: "shubhangi jadhav_2405"
+date: "2025-10-09"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#Q.1
+```{r}
+rm(list=ls())
+k=3
+p=2
+n1=3
+n2=2
+n3=3
+n=n1+n2+n3
+alpha=0.05
+x1=matrix(c(9,6,9,
+            3,2,7),nrow =2,byrow=T)
+x2=matrix(c(0,2,
+            4,0),nrow =2,byrow =T)
+x3=matrix(c(3,1,2,
+            8,9,7),nrow =2,byrow =T)
+x=cbind(x1,x2,x3)
+x=as.matrix(x)
+s1=cov(t(x1))
+s2=cov(t(x2))
+s3=cov(t(x3))
+s=cov(t(x))
+A1=(n1-1)*s1
+A2=(n2-1)*s2
+A3=(n3-1)*s3
+T=(n-1)*s
+W=A1+A2+A3
+B=T-W
+lambda_star=det(W)/det(T)
+m=n-1-((p+k)/2)
+test_stat=-m*log(lambda_star)
+df=p*(k-1)
+df_tret=k-1
+df_error=n-k
+df_total=n-1
+p_value=1-pchisq(test_stat,df)
+Manova=tibble(source=c("Treatment","Error","Total"),
+  d_f=c(df_tret,df_error,df_total),
+  SS=list(B,W,T))
+Manova$SS
+cat("wilks lambda is\n");print(lambda_star)
+cat("test_statistics\n");print(test_stat)
+print("p_value is\n");print(p_value)
+ifelse(p_value<alpha ,"reject H0","we fail to reject H0")
+```
+
+#Q.3
+```{r}
+rm(list=ls())
+k=3
+p=2
+n1=5
+n2=3
+n3=4
+n=n1+n2+n3
+alpha=0.05
+x1=matrix(c(6,5,8,4,7,
+            7,9,6,9,9),nrow =2)
+x2=matrix(c(3,1,2,
+            3,6,3),nrow =2)
+x3=matrix(c(2,5,3,2,
+            3,1,1,3),nrow =2)
+x=cbind(x1,x2,x3)
+x=as.matrix(x)
+s1=cov(t(x1))
+s2=cov(t(x2))
+s3=cov(t(x3))
+s=cov(t(x))
+A1=(n1-1)*s1
+A2=(n2-1)*s2
+A3=(n3-1)*s3
+T1=(n-1)*s
+T1=as.matrix(T1)
+W=A1+A2+A3
+W=as.matrix(W)
+B=T1-W
+B=as.matrix(B)
+lambda_star=det(W)/det(T1)
+m=n-1-((p+k)/2)
+test_stat=-m*log(lambda_star)
+df=p*(k-1)
+df_tret=k-1
+df_error=n-k
+df_total=n-1
+p_value=1-pchisq(test_stat,df)
+Manova=tibble(source=c("Treatment","Error","Total"),
+  d_f=c(df_tret,df_error,df_total),
+  SS=list(B,W,T1))
+Manova
+cat("wilks lambda is\n");print(lambda_star)
+cat("test_statistics\n");print(test_stat)
+print("p_value is\n");print(p_value)
+ifelse(p_value<alpha ,"reject H0","we fail to reject H0")
+print(Manova)
+View(Manova)
+Manova$SS
+```
+
+
+```{r}
+rm(list=ls())
+k=3
+p=2
+n1=5
+n2=3
+n3=4
+n=n1+n2+n3
+alpha=0.05
+x1=matrix(c(6,5,8,4,7,
+            7,9,6,9,9),nrow =2)
+x2=matrix(c(3,1,2,
+            3,6,3),nrow =2)
+x3=matrix(c(2,5,3,2,
+            3,1,1,3),nrow =2)
+x=cbind(x1,x2,x3)
+x=as.matrix(x)
+s1=cov(t(x1))
+s2=cov(t(x2))
+s3=cov(t(x3))
+s=cov(t(x))
+A1=(n1-1)*s1
+A2=(n2-1)*s2
+A3=(n3-1)*s3
+T1=(n-1)*s
+T1=as.matrix(T1)
+W=A1+A2+A3
+W=as.matrix(W)
+B=T1-W
+B=as.matrix(B)
+lambda_star=det(W)/det(T1)
+m=n-1-((p+k)/2)
+test_stat=-m*log(lambda_star)
+df=p*(k-1)
+df_tret=k-1
+df_error=n-k
+df_total=n-1
+p_value=1-pchisq(test_stat,df)
+Manova=tibble(source=c("Treatment","Error","Total"),
+  d_f=c(df_tret,df_error,df_total),
+  SS=list(B,W,T1))
+Manova
+cat("wilks lambda is\n");print(lambda_star)
+cat("test_statistics\n");print(test_stat)
+print("p_value is\n");print(p_value)
+ifelse(p_value<alpha ,"reject H0","we fail to reject H0")
+print(Manova)
+View(Manova)
+Manova$SS
+```
+

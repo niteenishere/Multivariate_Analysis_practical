@@ -1,0 +1,139 @@
+---
+title: "topic_7"
+author: "shubhangi jadhav_2405"
+date: "2025-10-03"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+#Q1:Principal component analysis.
+```{r}
+S <- matrix(c(1,0.846,0.805,0.859,0.473,0.398,0.301,0.382,
+              0.846,1,0.881,0.826,0.376,0.326,0.277,0.415,
+              0.805,0.881,1,0.801,0.380,0.319,0.237,0.345,
+              0.859,0.826,0.801,1,0.436,0.329,0.327,0.365,
+              0.473,0.376,0.380,0.436,1,0.762,0.730,0.629,
+              0.398,0.326,0.319,0.329,0.762,1,0.583,0.577,
+              0.301,0.277,0.237,0.327,0.730,0.583,1,0.539,
+              0.382,0.415,0.345,0.365,0.629,0.577,0.539,1),
+            nrow = 8,byrow = TRUE)
+p <- nrow(S);
+V_pc <- eigen(S)$values;        # Var(pc)
+P <- eigen(S)$vector;           # Coefficient(pc)
+TPV <- sum(diag(S));            # Total Popl var
+PV_pc <- (V_pc/TPV)*100         # Percent Var(pc)
+Cum_PV_pc <- cumsum(PV_pc)      # Cumulative Percent Var(pc)
+plot(V_pc,type = "b",pch= 19,
+     main= "Screen Plot",xlab = "PC",ylab = "V(PC)")
+
+# Result: df <- data.frame(var,PC1,PC2,PC3,PC4,PC5,PC6,PC7,PC8)
+
+row_name <- c(paste("X",1:8),"V(pc)","PV(pc)","Cum_V(pc)")
+df_matrix <- rbind(P,V_pc,PV_pc,Cum_PV_pc)
+df <- as.data.frame(df_matrix)
+colnames(df) <- paste0("PC",1:8)
+rownames(df) <- row_name
+print(df)
+```
+
+# Using iris Data
+```{r}
+data("iris")
+X <- t(scale(iris[,1:4]))
+S <- cor(t(X))
+p <- nrow(S);
+V_pc <- eigen(S)$values;        # Var(pc)
+P <- eigen(S)$vector;           # Coefficient(pc)
+TPV <- sum(diag(S));            # Total Popl var
+PV_pc <- (V_pc/TPV)*100         # Percent Var(pc)
+Cum_PV_pc <- cumsum(PV_pc)      # Cumulative Percent Var(pc)
+plot(V_pc,type = "b",pch= 19,
+     main= "Screen Plot",xlab = "PC",ylab = "V(PC)")
+
+# Result: df <- data.frame(var,PC1,PC2,PC3,PC4,PC5,PC6,PC7,PC8)
+
+row_name <- c(paste("X",1:4),"V(pc)","PV(pc)","Cum_V(pc)")
+df_matrix <- rbind(P,V_pc,PV_pc,Cum_PV_pc)
+df <- as.data.frame(df_matrix)
+colnames(df) <- paste0("PC",1:4)
+rownames(df) <- row_name
+print(df)
+
+# Transformed Variable Y=P'X
+y <- t(P)%*%X
+y <- t(y)
+plot(y[,1:2], 
+     col=c(rep("red",50),rep("blue",50),rep("green",50)),
+     pch = 19)
+legend("topright",legend = levels(iris$Species),
+       col=c("red","blue","green"),pch = 19)
+
+
+```
+#Q.2
+```{r}
+set.seed(1)
+library(Matrix)
+library(expm)
+library(matlib)
+s=matrix(c(8,2,3,1,
+           2,5,-1,3,
+           3,-1,6,-2,
+           1,3,-2,7),nrow = 4,byrow = T)
+p=nrow(s)
+q=2
+s11=s[1:q,1:q]
+s12=s[1:q,(q+1):p]
+s22=s[(q+1):p,(q+1):p]
+s21=t(s12)
+A=inv(sqrtm(s22))%*%s21%*%inv(sqrtm(s11))
+R1=t(A)%*%A
+R2=A%*%t(A)
+E=eigen(R1)$vectors
+L1=eigen(R1)$values
+F_=eigen(R2)$vectors
+L2=eigen(R2)$values
+U=inv(sqrtm(s11))%*%E
+V=inv(sqrtm(s22))%*%F_
+ro=sqrt(L1)
+
+#_________________output___________#
+sprintf("rho(1)=first canonical correlation coeff=%f",ro[1])
+sprintf("rho(2)=second canonical correlation coeff=%f",ro[2])
+sprintf("the coefficients of first pair of canonical variable are(in column)")
+print(cbind(U[,1],V[,1]))
+sprintf("the coefficients of second pair of canonical variable are(in column)")
+print(cbind(U[,2],V[,2]))
+#______________verification_____________#
+sprintf("the vcm of canonical variable is:")
+ccmat=t(U)%*%s12%*%V
+print(ccmat)
+#___________________________-
+l=as.matrix(U[,1])
+m=as.matrix(V[,1])
+x=t(as.matrix(iris[,1:4]))
+x1=x[1:2,]
+x2=x[3:4,]
+u=t(l)%*%x1
+v=t(m)%*%x2
+cat("\nThe correlation between first pair of canonical variables:\n")
+print(cor(as.vector(u), as.vector(v)))
+
+# Verification
+cat("\nThe V-C-M of canonical variables is:\n")
+ccmat <- t(U_) %*% s12 %*% V_
+print(ccmat)
+
+cat("\nCov(u,v):\n")
+print(cov(as.vector(u), as.vector(v)))
+c=rep(1:3,each=50)
+par(mar=c(2,2,2,2))
+plot(u,v,col=c,pch=16,xlab="u1",ylab="v1",main="scattter of cv")
+
+
+```
+

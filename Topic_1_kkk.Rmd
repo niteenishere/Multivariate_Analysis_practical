@@ -1,0 +1,211 @@
+---
+title: "topic:Sketching pdf and model sampling  from MND"
+author: "shubhangi jadhav_2405"
+date: "2025-07-18"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#Q1
+#sketch of MVND(mu,S)
+```{r,warning=FALSE}
+rm(list=ls())
+library(mvtnorm)
+library(plotly)
+library(plot3D)
+set.seed(123)
+x=seq(-4,4,length=100) #define x and y
+y=seq(-4,4,length=100)
+
+#create meshgrid matrices for x and y
+mesh=mesh(x,y)
+X=mesh$x
+Y=mesh$y
+
+#define bivariate normal parameters
+mu=c(0,0)
+sigma=matrix(c(1,0,0,1),nrow =2)
+
+#create density values for each (x,y) pair
+Z=matrix(dmvnorm(cbind(c(X),c(Y)),
+                 mean = mu,sigma = sigma),nrow = 100,byrow = FALSE)
+par(mfrow=c(1,2))
+#plot using surf3D
+surf3D(x=X,y=Y,z=Z,col="grey",
+       main="bivariate normal distribution:BNV(0,0,1,1,0.6)",
+       xlab=X,ylab=Y,zlab="density")
+contour(x,y,Z,
+        col="black", #black line
+        lwd=1.2,     #line width
+        nlevels=10,  #number of contours
+        xlab="X",ylab="Y",
+        main="2D Contour plot:bivariate normal")
+```
+
+#sketch of MVND(mu,S) with wireframe
+```{r}
+library(mvtnorm)
+library(plotly)
+library(plot3D)
+library(lattice)
+#grid
+x=seq(-4,4,length=50) #define x and y
+y=seq(-4,4,length=50)
+grid=expand.grid(x=x,y=y)
+#density matrix
+mu=c(0,0)
+sigma=matrix(c(1,-0.6,-0.6,1),2)
+z=matrix(dmvnorm(grid,mean=mu,sigma=sigma),nrow = 50)
+par(mfrow=c(1,2))
+#wireframe plot
+wireframe(z~x*y,data=grid,
+          col="blue",
+          main="wireframe:bivariate normal",
+          xlab="X",ylab="Y",zlab="density",
+          scales=list(arrows=F))
+contour(x,y,z,
+        col="black", #black line
+        lwd=1.2,     #line width
+        nlevels=10,  #number of contours
+        xlab="X",ylab="Y",
+        main="2D Contour plot:bivariate normal")
+```
+```{r}
+library(mvtnorm)
+library(plotly)
+library(plot3D)
+library(lattice)
+#grid
+x=seq(-4,4,length=50) #define x and y
+y=seq(-4,4,length=50)
+grid=expand.grid(x=x,y=y)
+#density matrix
+mu=c(0,0)
+sigma=matrix(c(1,0.6,0.6,1),2)
+z=matrix(dmvnorm(grid,mean=mu,sigma=sigma),nrow = 50)
+par(mfrow=c(1,2))
+#wireframe plot
+wireframe(z~x*y,data=grid,
+          col="blue",
+          main="wireframe:bivariate normal",
+          xlab="X",ylab="Y",zlab="density",
+          scales=list(arrows=F))
+contour(x,y,z,
+        col="black", #black line
+        lwd=1.2,     #line width
+        nlevels=10,  #number of contours
+        xlab="X",ylab="Y",
+        main="2D Contour plot:bivariate normal")
+```
+# Q.2
+```{r}
+rm(list = ls())
+library(matrixcalc)
+library(MASS)
+library(Matrix)
+mu=c(0,0)
+S=matrix(c(4,(2*3*0.6),(2*3*0.6),9),nrow =2)
+n=2000
+x=t(mvrnorm(n,mu,S))
+mu_hat=rowMeans(x)
+cbind(mu,mu_hat)
+c_x=cov(t(x))
+c_x
+
+pairs(t(x))
+```
+#Q.3
+```{r}
+# multiple scatter plot and correlation matrix
+data("iris")
+attach(iris)
+pairs(iris[,1:4])
+# Test of univariate normality and test of multivariate normality
+library(MVN)
+result=mvn(data=iris[,1:4],mvn_test ="mardia")
+summary(result)
+```
+
+#Q.4
+```{r}
+rm(list = ls())
+set.seed(123)
+library(matrixcalc)
+library(MASS)
+library(Matrix)
+mu=c(4.32,14.01,1.95,2.17,2.45)
+s=matrix(c(4.308,1.683,1.803,2.155,-0.253,
+           1.683,1.768,0.588,0.177,0.176,
+           1.803,0.588,0.81,1.065,-0.158,
+           2.155,0.177,1.065,1.970,-0.357,
+           -0.253,0.176,-0.158,-0.357,0.504),nrow=5,byrow=TRUE)
+p=5
+n=200
+#___________choleskeys decomosition of sigma and verification___#
+c=t(chol(s))
+t(c)%*%c
+# correlation matrix
+R=cov2cor(s)
+R
+
+x=matrix(NA,p,n)
+for (i in 1:n){
+  y=as.matrix(rnorm(p,0,1)) #as.matrix
+  x[,i]=y
+}
+X_1= mu+(c%*%x)
+mu_hat=rowMeans(X_1)
+cbind(mu,mu_hat)
+c_x_1=cov(t(X_1))
+cbind(s,c_x_1)
+
+#total population variance
+tpv=sum(diag(s))
+tpv
+#generalised populaion variance
+gpv=det(s)
+gpv
+#total sample variance
+tsv=sum(diag(c_x_1))
+tsv
+#generalised sample variance
+gsv=det(c_x_1)
+gsv
+```
+#Q.5
+```{r}
+rm(list = ls())
+set.seed(123)
+library(matrixcalc)
+library(MASS)
+library(Matrix)
+mu=c(260,231,222)
+s=matrix(c(2276,1508,813,
+           1508,2206,1349,
+           813,1349,1865),nrow=3)
+p=3
+n=100
+x=t(mvrnorm(n,mu,s))
+mu_hat=rowMeans(x)
+cbind(mu,mu_hat)
+c_x=cov(t(x))
+cbind(s,c_x)
+R=cov2cor(c_x)
+R
+#total population variance
+tpv=sum(diag(s))
+tpv
+#generalised populaion variance
+gpv=det(s)
+gpv
+#total sample variance
+tsv=sum(diag(c_x))
+tsv
+#generalised sample variance
+gsv=det(c_x)
+gsv
+```
+

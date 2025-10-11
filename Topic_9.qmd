@@ -1,0 +1,81 @@
+---
+title: "topic_9"
+format: html
+editor: visual
+---
+
+## Quarto
+
+Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
+
+## Running Code
+
+When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
+
+```{r}
+
+rm(list = ls());  library(readxl)
+data <- read_excel("C:\\Users\\shubh\\OneDrive\\Desktop\\ST-415-515\\KKK_SEM_III\\EXH_TABL.XLS")
+N <- as.matrix(data[, 1:5]) # contingency table,columns (CT1:CT5)
+rownames(N) <- data$RowNames # Row names
+colnames(N) <- data$ColNames[!is.na(data$ColNames)] #column names
+chisq.test(N);   #chi.sq test
+n <- sum(N);  P <- N / n;   r <- rowSums(P);   c <- colSums(P) #Marginal proportions
+Dr.inv <- diag(1 / sqrt(r));  Dc.inv <- diag(1 / sqrt(c)); # Diagonal matrices
+
+# Standardized residual matrix ,SVD , Singular values & Inertia per axis
+S <- Dr.inv %*% (P - r %*% t(c)) %*% Dc.inv
+SVD <- svd(S);  U <- SVD$u;   V <- SVD$v;   Sigma <- SVD$d;
+Total_Inertia <- sum(Sigma^2)
+chi_sq <- n*Total_Inertia
+inertia_percent <- round(100 * Sigma^2 / sum(Sigma^2), 2)
+F_ <- Dr.inv %*% U %*% diag(Sigma)   # Rows principal coordinates
+G_ <- Dc.inv %*% V %*% diag(Sigma)   # Columns principal coordinates
+F1 <- F_[, 1]; F2 <- F_[, 2]; #1st & 2nd dimensions of F
+G1 <- G_[, 1]; G2 <- G_[, 2]; #1st & 2nd dimensions of F
+
+# Biplot
+xlim <- range(c(F1, G1)) * 1.2; ylim <- range(c(F2, G2)) * 1.2
+
+plot(
+  F1, F2,
+  xlim = xlim, ylim = ylim,
+  xlab = paste0("Component 1 (", round(100 * Sigma[1]^2 / sum(Sigma^2), 1), "%)"),
+  ylab = paste0("Component 2 (", round(100 * Sigma[2]^2 / sum(Sigma^2), 1), "%)"),
+  main = "Symmetric Plot (2D Biplot)",
+  pch = 19, col = "brown"
+)
+
+points(F1, F2, pch = 19, col = "brown"); # Row points (brown circles)
+text(F1, F2, labels = rownames(N), col = "brown", pos = 3, cex = 0.8)
+points(G1, G2, pch = 15, col = "blue"); # Column points (blue squares)
+text(G1, G2, labels = colnames(N), col = "blue", pos = 3, cex = 0.8)
+abline(h = 0, v = 0, col = "gray60", lty = 2); # Reference lines
+
+#Scree Plot for Inertia
+barplot(
+  (Sigma^2 / Total_Inertia) * 100,
+  names.arg = paste0("Dim", 1:length(Sigma)),
+  ylab = "% of Inertia",
+  main = "Scree Plot of Inertia",
+  col = "lightblue"
+)
+
+# PRINT IMPORTANT TERMS & INERTIA FOR EACH AXIS
+cat("\n Inertia (per axis) \n")
+for (i in 1:length(Sigma^2)) {
+  cat(paste0("Axis ", i, ": ", inertia_percent[i], "% of total inertia\n"))
+}
+cat("\nTotal Inertia: ", Total_Inertia, "\n");  
+cat("Chi-square (n * Total Inertia): ", chi_sq, "\n")
+cat("\n Row Principal Coordinates (F) \n"); print(round(F_[, 1:2], 4))  # first 2 dims
+cat("\n Column Principal Coordinates (G) \n");  print(round(G_[, 1:2], 4))  # first 2 dims
+```
+
+You can add options to executable code like this
+
+```{r}
+
+```
+
+The `echo: false` option disables the printing of code (only output is displayed).
