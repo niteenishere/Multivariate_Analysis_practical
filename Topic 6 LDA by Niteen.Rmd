@@ -1,0 +1,69 @@
+---
+title: "Classification and Linear Discriminant Analysis"
+author: "Mr.Pardeshi"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+
+
+# Topic Question 3
+
+```{r }
+
+#| Finding Best Fisher Linear Discriminant Function
+
+data("iris")
+
+#| Seperate data
+
+data1=iris[iris$Species=='setosa',]
+data2=iris[iris$Species=='versicolor',]
+
+n1=nrow(data1)
+n2=nrow(data2)
+p=ncol(data1)
+View(data1)
+mu=colMeans(data1[,-5])
+nu=colMeans(data2[,-5])
+
+S1=cov(data1[,-5])
+S2=cov(data2[,-5])
+
+# Pooled Covariance Matrix 
+pooled_S= ((n1-1)*S1 + (n2-1)*S2)/(n1+n2-2)
+
+# Coefficient of Fisher Linear Discriminant Function
+dell=solve(pooled_S)%*%(mu-nu)
+cat("LDF Coefficients (a_vector) from theory:",'\n')
+print(dell)
+
+# a) Mahalonbis Squared Distance
+D2_sample=as.numeric(t(mu-nu)%*%dell)
+print(paste("Sample Mahalanobis D-squared:", D2_sample))
+
+
+# b) Best FLDF
+cutoff_m = 1/2 *(D2_sample%*%(mu+nu))
+cat(sprintf("\nCutoff (midpoint) m = %.4f\n", cutoff_m))
+cat("Rule: Classify as 'setosa' if L(x) >", round(cutoff_m, 4), 
+    ", else 'versicolor'.\n\n")
+
+
+# c) Probability of Misclassification
+prob_misclassification=pnorm(-sqrt(D2_sample)/2)
+print(paste("Plug-in Prob. of Misclassification:", prob_misclassification))
+
+# d) Classify the observation X0 =( 100, 78, 140,93)
+
+X0 =c( 100, 78, 140,93)
+score_X0=t(D2_sample)%*%X0
+ifelse(score_X0 > cutoff_m,"Xo belongs to setosa species","else versicolor")
+```
+
+
+# Question 4
+
+```{r echo=FALSE}
+
+```

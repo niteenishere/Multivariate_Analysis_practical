@@ -1,0 +1,276 @@
+---
+title: "Correspodence_Analysis_and_Bi_Plots"
+author: "Mr. Niteeenkumar"
+format: html
+editor: visual
+---
+
+## Running Code
+
+When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:\
+
+## Q.1
+
+```{r}
+
+data1=matrix(c(21,241,251,17,54,40,10,74,65,6,11,8,11,79,108),nrow=5,ncol=3,byrow = TRUE)
+rownames(data1)=c('Married','Widowed','Divorced','seperated','Never married')
+colnames(data1)=c('Dull',"Routine",'Excited')
+data1
+
+```
+
+## a) Calculate Pearson Chi-square statistic
+
+The Chi-square test tells us whether there is a significant association between the variables.
+
+The null hypothesis ($H_0$) : There is no association between the variables.
+
+```{r}
+#| echo: false
+
+# Chi-square test
+result <- chisq.test(data1)
+print(result)
+
+cat("Conclusion based on chi square test:",ifelse(result$p.value < 0.05 ,"There is an association between variables","there is no association betweeen variables"),'\n')
+
+r=rowSums(data1)
+c=colSums(data1)
+
+N=sum(r)
+cat("Grand Total:",N,'\n')
+
+
+```
+
+The `echo: false` option disables the printing of code (only output is displayed).
+
+## b) & c) CA Calculations \* Total Inertia
+
+```{r}
+
+# Correspondence Matrix (P)
+P =data1/N;P
+
+# marginal probabilities
+r_mass=rowSums(P);sum(r_mass)
+c_mass=colSums(P);sum(c_mass)
+
+# Diagonal matrices of the inverse square root of masses
+(Dr_inv=diag(1/sqrt(r_mass)))
+(Dc_inv=diag(1/sqrt(c_mass)))
+
+# matrix of expected proportions
+(E_prop=outer(r_mass,c_mass))
+
+# Standardised Residual matrix
+S=Dr_inv%*%(P-E_prop)%*%Dc_inv;S
+
+# SVD on S
+# S =U*D_alpha*V'
+
+svd_S=svd(S)
+U=svd_S$u;  V=svd_S$v;  D=diag(svd_S$d) #matrix of singular values (alpha)
+
+# calculate Principal Inertias (Eigenvalues)
+# Inertia(lambda) =(singular value)^2
+
+(eigenvalues= (svd_S$d)^2)
+
+#  c) Obtain Inertia
+(Inertia=sum(eigenvalues))
+cat("Total Inertia lambda:",Inertia,'\n')
+
+# ----- key Identity Check ------
+# Total inertia should also equal to (chisq / N)
+identical(round((result$statistic/N),4),round(Inertia,4))
+(inertia_check=result$statistic/N)
+cat("Chi-square inertia check:",inertia_check,'\n')
+cat("Inertia obtained is:",Inertia,'\n')
+
+```
+
+***INTERPRETATION:** This value (Inertia : 0.034) represent total amount of association (variance) in the variables. it's measures how much observed variables ( data) deviates from independence.*
+
+## e) Quality of Representation: Bi-plot
+
+```{r}
+
+# percentage of inertia for each dimension
+(perc_inert= eigenvalues/Inertia *100)
+
+# cumulative percentage inertia
+(cum_perc_inertia=cumsum(perc_inert))
+
+# Note : the number of dimensions = min(R-1,C-1) = min(4,2)= 2
+
+(inertia_summary=data.frame(
+  Dimension=1:length(eigenvalues),
+  inertia=eigenvalues,
+  percentage_inertia=perc_inert,
+  cumulative_perc=cum_perc_inertia
+))
+
+```
+
+***Interpretation:** The cumulative percentage for Dimension 2 tells us total inertia captured by our 2D biplot*. in this scenario 100% inertia captured by 2 dimensions this means biplot is perfect representation of data.
+
+## d) Visualization of Bi-plot
+
+*we will use symmetric biplot, where both row and column points are scaled to show their relationship.*
+
+```{r}
+
+# Row principal coordinates (phi)
+phi = Dr_inv%*%U%*%D
+
+# Column principal coordinates (gamma)
+gamma = Dc_inv%*%V%*%D
+
+rownames(phi)=rownames(data1)
+colnames(phi)=paste("Dim",1:ncol(phi))
+rownames(gamma)=colnames(data1)
+colnames(gamma)=paste("Dim",1:ncol(gamma))
+
+# creating bi-plot using base R
+x_lim=range(c(phi[,1],gamma[,1]))*1.2
+y_lim=range(c(phi[,2],gamma[,2]))*1.2
+
+
+plot(phi[,1:2],xlim=x_lim,ylim=y_lim,col='blue',pch=15,
+     main="symmetric biplot",
+     xlab = paste0("Dimension 1 (", round(perc_inert[1], 1), "%)"),
+     ylab = paste0("Dimension 2 (", round(perc_inert[2], 1), "%)") )
+# Add row labels
+text(phi[,1:2],labels=rownames(phi),col='blue',pos=4) # pos=4 put text to right
+# Add column points 
+points(gamma[,1:2],col='red',pch=18)
+# Add column labels
+text(gamma[,1:2],labels=rownames(gamma),pos=1,col='red')
+# Add origin lines
+abline(h=0,v=0,lty=2,col='gray')
+```
+
+***Interpretation from Bi-plot:***
+
+-   **Rules for Interpretation:** Points that are closer to each other has stronger than average association. points that are far apart are disassociated.
+
+1\) ***Routine** and **Divorced are extremely close to each other this shows a strong association.***
+
+2\) "**Dull"** & **"Seperated" these two points are grouped together on far right i.e, seperated individuals are much more likely to report Dull.**
+
+3\) **"Married" near to origin this means the married group attitude profile is very special and doesn't deviate strongly toward any single attitude.**
+
+```{r verification }
+library(ca)
+(ca_result=ca(data1))
+summary(ca_result)
+plot(ca_result)
+```
+
+------------------------------------------------------------------------
+
+------------------------------------------------------------------------
+
+## Q.2 CAvariants - Selikoff's data
+
+```{r}
+library("CAvariants")
+data(package='CAvariants')
+#| Selikoff's data, a two-way contingency table
+#| asbestos
+data("asbestos");View(asbestos)
+
+```
+
+## a) Testing the significance of association between variables
+
+```{r}
+result2=chisq.test(asbestos,simulate.p.value =TRUE,B=1000);print(result2)
+
+cat("With the help of Non-Parametric test of association it is observed that:",ifelse(result2$p.value <= 0.05 ,"There is an association between variables","There is no association between variables"),'\n')
+```
+
+***simulate.p.value =T tells R to use simulation when we have large data to use fisher exact test** & **B = 10000 are number of replicates (for precision)***
+
+## b) Correspondence Analysis to Study Pattern of Association
+
+```{r}
+
+N1=sum(asbestos)
+
+P1= asbestos/N1
+
+r1_mass=rowSums(P1)
+c1_mass=colSums(P1)
+
+Dr1_inv=diag(1/sqrt(r1_mass))
+Dc1_inv=diag(1/sqrt(c1_mass))
+
+# matrix of expected proportion
+E1_prop=outer(r1_mass,c1_mass)
+
+# matrix of standardised residual
+S1=Dr1_inv%*%(P1 - E1_prop)%*%Dc1_inv
+
+# SVD of matrix of standardised residual
+
+svd_S1=svd(S1)
+
+D1=diag(svd_S1$d)
+eigenvalues_1=(svd_S1$d^2)
+Inertia_1=sum(eigenvalues_1)
+cat("Total Iertia lambda is:",Inertia_1,'\n')
+
+U1=svd_S1$u ; V1=svd_S1$v
+
+# --- Inertia Check -----
+cat("Inertia cross checking , Inertia from result2",round((result2$statistic/N1),3))
+cat("INertia obtained from CA:",round(Inertia_1,3))
+
+```
+
+```{r}
+
+(data_summary=data.frame(
+             Dimension=1:length(eigenvalues_1),
+             Inertia=eigenvalues_1,
+             perc_inertia=eigenvalues_1/sum(eigenvalues_1)*100,
+             cumulative_perc_inertia=cumsum(eigenvalues_1/sum(eigenvalues_1)*100)
+))
+```
+
+## c) Bi-plot (2-Dimensional display)
+
+```{r}
+
+phi1=Dr1_inv%*%U1%*%D1
+gamma1=Dc1_inv%*%V1%*%D1
+
+rownames(phi1)=rownames(asbestos)
+colnames(phi1)=paste("Dim",1:nrow(asbestos))
+rownames(gamma1)=colnames(asbestos)
+colnames(gamma1)=colnames("Dim",1:row(asbestos))
+
+xlim1=range(c(phi1[,1],gamma1[,1]))*1.2
+ylim1=range(c(phi1[,2],gamma1[,2]))*1.2
+
+plot(phi1[,1:2],xlim=xlim1,ylim=ylim1,main="Symmetric Bi-plot",
+    xlab=paste0("Dimension 1 (", round(data_summary$perc_inert[1], 1), "%)"),
+    ylab=paste0("Dimension 2(",round(data_summary$perc_inertia[2],1),"%)"),
+    col='blue',pch=18)
+text(phi1[,1:2],labels = rownames(phi1),col='blue',pos=4)
+points(gamma1[,1:2],col='red',pch=10)
+text(gamma1[,1:2],labels=rownames(gamma1),col='red',pos=1)
+abline(h=0,v=0,col='gray')
+```
+
+## Cross checking Bi-plot
+
+```{r}
+library(ca)
+ca_result2=ca(asbestos)
+summary(ca_result2)
+plot(ca_result2)
+```

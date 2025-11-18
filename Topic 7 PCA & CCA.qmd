@@ -1,0 +1,147 @@
+---
+title: "Principal Component & Correlation Analysis"
+author: "Mr. Pardeshi"
+format: html
+editor: visual
+---
+
+## Quarto
+
+Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
+
+# Question 1: Principal Component Analysis (PCA)
+
+```{r}
+v1=c(1,0.846,0.805,0.859,0.473,0.398,0.301,0.382)
+v2=c(0.846,1,0.881,0.826,0.376,0.326,0.277,0.415)
+v3=c(0.805,0.881,1,0.816,0.380,0.319,0.237,0.345)
+v4=c(0.859,0.826,0.801,1,0.380,0.319,0.237,0.345)
+v5=c(0.473,0.376,0.380,0.436,1,0.329,0.327,0.365)
+v6=c(0.398,0.326,0.319,0.329,0.762,1,0.730,0.629)
+v7=c(0.301,0.277,0.237,0.327,0.730,0.583,1,0.577)
+v8=c(0.382,0.415,0.345,0.365,0.629,0.577,0.539,1)
+(Sigma=matrix(c(v1,
+               v2,
+               v3,
+               v4,
+               v5,
+               v6,
+               v7,v8),nrow=8,ncol=8,byrow=T))
+
+colnames(Sigma)=paste("X_",1:8)
+
+# Eigen Decomposition of Sigma
+
+eigen_decomp=eigen(Sigma)
+eigen_values=eigen(Sigma)$values
+eigen_vector=eigen(Sigma)$vectors
+
+total_variance=sum(eigen_values)
+percent_variation=eigen_values/total_variance
+cumulative_perc=cumsum(percent_variation)
+
+(summary_frame=data.frame(Eigen_Values=eigen_values,Percent_Variation=percent_variation,Cumulative_Perc_Variation=cumulative_perc))
+
+
+plot(1:8,(summary_frame$Cumulative_Perc_Variation),main='Scree Plot',xlab='eigen Values for Sigma Matrix',ylab='Cumulative Percent Variation Explained',col='blue',type='b')
+```
+
+# Question 2
+
+```{r}
+#| echo: false
+
+(Sigma1=matrix(c(8,2,3,1,
+                2,5,-1,3,
+                3,-1,6,-2,
+                1,3,-2,7),4,4))
+
+S11=Sigma1[1:2,1:2]
+S22=Sigma1[3:4,3:4]
+S12=Sigma1[1:2,3:4]
+
+library(expm)
+
+A=solve(sqrtm(S22))%*%t(S12)%*%solve(sqrtm(S11))
+
+AA_=A%*%t(A);A_A=t(A)%*%A
+
+E1=eigen(AA_)$values
+E2=eigen(A_A)$values
+
+Eigen_vectors=eigen(AA_)$vectors
+
+(U1=Eigen_vectors[,1]%*%solve(sqrtm(S11)))
+(V1=Eigen_vectors[,1]%*%solve(sqrtm(S22)))
+(U2=Eigen_vectors[,2]%*%solve(sqrtm(S11)))
+(V2=Eigen_vectors[,2]%*%solve(sqrtm(S22)))
+(dt=cbind(t(U1),t(V1),t(U2),t(V2)))
+
+canonical_corr <- sqrt(E1)
+canonical_corr
+```
+
+The `echo: false` option disables the printing of code (only output is displayed).
+
+```{r Verification CCa}
+(cancor(S11,S22))
+
+```
+
+```{r}
+# fixed canonical correlation code
+library(expm)   # for sqrtm
+
+Sigma1 <- matrix(c(
+  8,  2,  3,  1,
+  2,  5, -1,  3,
+  3, -1,  6, -2,
+  1,  3, -2,  7), 4, 4, byrow = TRUE)
+
+S11 <- Sigma1[1:2, 1:2]   # cov(X)
+S22 <- Sigma1[3:4, 3:4]   # cov(Y)
+S12 <- Sigma1[1:2, 3:4]   # cov(X,Y)
+S21 <- t(S12)
+
+# construct the whitened cross-covariance A = S22^{-1/2} S21 S11^{-1/2}
+A <- solve(sqrtm(S22)) %*% S21 %*% solve(sqrtm(S11))
+
+# SVD of A
+sv <- svd(A)
+P <- sv$u        # left singular vectors (for Y side, in whitened space)
+D <- sv$d        # singular values = canonical correlations
+Q <- sv$v        # right singular vectors (for X side, in whitened space)
+
+# canonical correlation coefficients for original variables
+# columns of 'a' are coefficient vectors for X; columns of 'b' for Y
+a <- solve(sqrtm(S11)) %*% Q   # a: 2 x r  (X-side coefficients)
+b <- solve(sqrtm(S22)) %*% P   # b: 2 x r  (Y-side coefficients)
+
+# canonical correlations (should be the singular values)
+canonical_correlations <- D
+
+# check: covariance matrix between canonical variates = t(a) %*% S12 %*% b
+corr_matrix_between_variates <- t(a) %*% S12 %*% b
+
+# since a and b produce unit-variance canonical variates, diagonal of corr_matrix = D
+diag_corrs <- diag(corr_matrix_between_variates)
+
+# check variances of canonical variates (should be ~1)
+var_U <- diag(t(a) %*% S11 %*% a)
+var_V <- diag(t(b) %*% S22 %*% b)
+
+# print results
+cat("Canonical correlations (singular values):\n")
+print(canonical_correlations)
+
+cat("\nCovariance/correlation matrix between canonical variates (t(a) %*% S12 %*% b):\n")
+print(round(corr_matrix_between_variates, 8))
+
+cat("\nDiagonal (should equal canonical correlations):\n")
+print(round(diag_corrs, 8))
+
+cat("\nVariances of canonical variates (should be 1):\n")
+print(round(var_U, 8))
+print(round(var_V, 8))
+
+```
